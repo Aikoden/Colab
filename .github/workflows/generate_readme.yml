@@ -1,0 +1,38 @@
+name: Generate README from Jupyter Notebooks
+
+on:
+  push:
+    branches:
+      - main  # 监听推送到主分支时触发
+
+jobs:
+  generate-readme:
+    runs-on: ubuntu-latest  # 选择使用的操作系统（这里是 Ubuntu）
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # 获取仓库代码
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'  # 设置 Python 版本
+
+      - name: Install dependencies
+        run: |
+          pip install nbconvert  # 安装 nbconvert 用于转换 .ipynb 文件
+
+      - name: Convert notebook to markdown
+        run: |
+          jupyter nbconvert --to markdown notebooks/*.ipynb --output-dir=docs/  # 转换 Jupyter Notebook 为 markdown
+
+      - name: Commit and push README update
+        run: |
+          echo "# Project README" > README.md  # 创建 README.md 文件
+          echo "This README is auto-generated from the Jupyter notebooks." >> README.md
+          cat docs/*.md >> README.md  # 将转换后的文件内容添加到 README.md
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update README.md"
+          git push origin main  # 将修改推送到仓库
